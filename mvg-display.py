@@ -59,7 +59,7 @@ while True:
                     print(line[:3] + " "+destination[:13]+" "+str(minutes))
                 print('')
             except Exception as e:
-                print('In outer try: '+str(e))
+                print('In inner try: '+str(e))
                 continue
 
         # sleep before new round
