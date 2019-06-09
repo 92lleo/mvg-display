@@ -93,6 +93,8 @@ bool update() {
 	isRefreshing = true;
 	stopBlink();
 
+	lcd.setCursor(4, 3);
+	lcd.print("refreshing...");
 
 	if(WiFi.status() != WL_CONNECTED){
 		// TODO: not the best solution?
