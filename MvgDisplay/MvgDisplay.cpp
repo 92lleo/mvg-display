@@ -12,10 +12,12 @@ const char* password = "";
 const String station = "barthstra%DFe"; //replace with your station, go to www.mvg-live.de/ims/dfiStaticAuswahl.svc, enter your station and check the following url
 
 const int updateTimer = 5000;
-const int blinkTimer = 1370;
+const int blinkTimer = 1500;
 
 unsigned long lastUpdate = 0;
 unsigned long lastBlink = 0;
+volatile bool isBlinking = false;
+volatile bool isRefreshing = false;
 
 // 20x4 lcd display. for 16x2 all lcd related values have to be adapted //TODO
 // wiring esp -> lcd
@@ -61,26 +63,36 @@ void loop() {
 		update();
 	}
 
-	// used to see if esp is still alive
-	if((millis() - lastBlink) > blinkTimer){
-		lastBlink = millis();
-		blink();
+	if(!isRefreshing) {
+		// used to see if esp is still alive
+		if((!isBlinking && (millis() - lastBlink) > blinkTimer)){
+			lastBlink = millis();
+			startBlink();
+		}
+		if((isBlinking && (millis() - lastBlink) > blinkTimer/4)){
+			stopBlink();
+		}
 	}
 
 	delay(10) ;
 }
 
-void blink(){
-	lcd.setCursor(19, 0);
-    lcd.blink();
-    delay(blinkTimer/4);
-    lcd.noBlink();
+void startBlink(){
+	lcd.setCursor(18, 0);
+    lcd.cursor();
+    isBlinking = true;
+}
+
+void stopBlink(){
+	lcd.noCursor();
+	isBlinking = false;
 }
 
 bool update() {
 
-	lcd.setCursor(0, 3);
-	lcd.print(" ... refreshing ... ");
+	isRefreshing = true;
+	stopBlink();
+
 
 	if(WiFi.status() != WL_CONNECTED){
 		// TODO: not the best solution?
@@ -100,6 +112,8 @@ bool update() {
 	}
 
 	writeToDisplay(departures);
+
+	isRefreshing = false;
 
 	return true;
 }

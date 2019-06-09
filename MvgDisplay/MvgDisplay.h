@@ -9,7 +9,8 @@ struct Departure {
 	String minutes;
 };
 
-void blink();
+void startBlink();
+void stopBlink();
 bool update();
 bool getDeparturesRaw(const String& station, String& result);
 bool getDepartureList(String& rawList, std::vector<Departure>& departureList);
