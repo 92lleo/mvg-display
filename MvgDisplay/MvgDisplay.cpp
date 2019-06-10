@@ -44,7 +44,20 @@ void setup() {
 
 	lcd.setCursor(0, 3);
 	WiFi.begin(ssid, password);
+	int tries = 0;
 	while (WiFi.status() != WL_CONNECTED) {
+		if(tries == 20){
+			lcd.setCursor(2, 3);
+			lcd.print("taking too long");
+			lcd.setCursor(0, 2);
+		}
+		if(tries >= 40) {
+			lcd.setCursor(2, 3);
+			lcd.print(".restarting....");
+			ESP.restart();
+			delay(1);
+		}
+		tries++;
 		delay(500);
 		lcd.print(".");
 	}
