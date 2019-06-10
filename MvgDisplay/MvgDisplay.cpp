@@ -13,6 +13,9 @@ const String station = "barthstra%DFe"; //replace with your station, go to www.m
 
 const int updateTimer = 5000;
 const int blinkTimer = 1500;
+const int maxErrorCount = 10;
+
+int errorCount = 0;
 
 unsigned long lastUpdate = 0;
 unsigned long lastBlink = 0;
@@ -58,9 +61,17 @@ void setup() {
 }
 
 void loop() {
+
+	if(errorCount >= maxErrorCount){
+		ESP.restart();
+	}
+
 	if((millis() - lastUpdate) > updateTimer){
-		lastUpdate = millis();
-		update();
+		if(update()) {
+			lastUpdate = millis();
+		} else {
+			errorCount++;
+		}
 	}
 
 	if(!isRefreshing) {
@@ -97,26 +108,27 @@ bool update() {
 	lcd.print("refreshing...");
 
 	if(WiFi.status() != WL_CONNECTED){
-		// TODO: not the best solution?
-		ESP.restart();
-		delay(1);
+		errorCount++;
+		isRefreshing = false;
+		return false;
 	}
 
 
 	String rawList = "";
 	if(!getDeparturesRaw(station, rawList)) {
+		isRefreshing = false;
 		return false;
 	}
 
 	std::vector<Departure> departures;
 	if(!getDepartureList(rawList, departures)) {
+		isRefreshing = false;
 		return false;
 	}
 
 	writeToDisplay(departures);
 
 	isRefreshing = false;
-
 	return true;
 }
 
@@ -132,6 +144,7 @@ bool getDeparturesRaw(const String& station, String& result) {
 	if (!httpClient.begin(wifiClient, url)) {
 		return false;
 	} else {
+		httpClient.setTimeout(2500);
 		int httpReturnCode = httpClient.GET();
 
 		// httpCode will be negative on error
